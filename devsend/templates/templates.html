@@ -1,39 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Templates - DevSend</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/static/styles.css" rel="stylesheet">
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/dashboard">DevSend</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/send">Send Now</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/recipients">Recipients</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="/templates">Templates</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/jobs">Scheduled Jobs</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/senders">Senders</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/api-keys">API Keys</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/logs">Logs</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/profile">Profile</a></li>
-                </ul>
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+{% extends "base.html" %}
 
+{% block title %}Templates - DevSend{% endblock %}
+
+{% block content %}
     <div class="container mt-4">
         <div class="page-header">
             <div>
@@ -42,10 +11,10 @@
             </div>
             <div>
                 <button class="btn btn-outline-primary me-2" onclick="loadSampleTemplates()">
-                    📋 Load Sample Templates
+                    <i class="fas fa-clipboard-list me-1"></i> Load Sample Templates
                 </button>
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
-                    + Create Template
+                    <i class="fas fa-plus me-1"></i> Create Template
                 </button>
             </div>
         </div>
@@ -79,9 +48,15 @@
                     <td class="text-muted">{{ template.created_at.strftime('%b %d, %Y') }}</td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn btn-sm btn-outline-primary" onclick="previewTemplate({{ template.id }})">👁️ Preview</button>
-                            <button class="btn btn-sm btn-outline-success" onclick="duplicateTemplate({{ template.id }})">📋 Duplicate</button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteTemplate({{ template.id }})">Delete</button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="previewTemplate({{ template.id }})">
+                                <i class="fas fa-eye me-1"></i> Preview
+                            </button>
+                            <button class="btn btn-sm btn-outline-success" onclick="duplicateTemplate({{ template.id }})">
+                                <i class="fas fa-copy me-1"></i> Duplicate
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteTemplate({{ template.id }})">
+                                <i class="fas fa-trash me-1"></i> Delete
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -113,13 +88,14 @@
                         <div class="mb-3">
                             <label class="form-label">Template Type</label>
                             <select class="form-control" id="templateType" onchange="loadTemplateType()">
-                                <option value="blank">Blank Template</option>
-                                <option value="marketing">Marketing Email</option>
-                                <option value="newsletter">Newsletter</option>
-                                <option value="promotional">Promotional Offer</option>
-                                <option value="transactional">Transactional</option>
-                                <option value="welcome">Welcome Email</option>
+                                <option value="blank">Blank Template (Customizable)</option>
+                                <option value="marketing">Marketing Email (Business Solutions)</option>
+                                <option value="newsletter">Newsletter (Monthly Updates)</option>
+                                <option value="promotional">Promotional (Sales & Offers)</option>
+                                <option value="transactional">Transactional (Order Confirmation)</option>
+                                <option value="welcome">Welcome Email (Onboarding)</option>
                             </select>
+                            <small class="text-muted">Select a template type to generate professional, ready-to-use HTML</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Logo URL</label>
@@ -189,9 +165,9 @@
             </div>
         </div>
     </div>
+{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/app.js"></script>
+{% block extra_scripts %}
     <script>
         setupSearch('templatesTable');
         
@@ -255,7 +231,7 @@
 
             let htmlBody = '';
             
-            // Professional email wrapper
+            // Professional email wrapper with modern styling
             const emailHeader = `
 <!DOCTYPE html>
 <html>
@@ -263,28 +239,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${companyName}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
     <style>
-        body { margin: 0; padding: 0; font-family: 'Arial', 'Helvetica', sans-serif; background-color: #f4f4f4; }
-        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
-        .header { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 30px 20px; text-align: center; }
-        .header img { max-width: 200px; height: auto; }
-        .content { padding: 40px 30px; color: #333333; line-height: 1.6; }
-        .content h1 { color: #1e40af; font-size: 28px; margin-bottom: 20px; }
-        .content h2 { color: #1e40af; font-size: 22px; margin-top: 30px; }
-        .content p { font-size: 16px; margin-bottom: 15px; }
-        .cta-button { display: inline-block; background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%); color: #000000; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; box-shadow: 0 4px 6px rgba(212, 175, 55, 0.3); }
-        .cta-button:hover { background: linear-gradient(135deg, #b8941f 0%, #d4af37 100%); }
-        .highlight-box { background-color: #f0f9ff; border-left: 4px solid #1e40af; padding: 20px; margin: 20px 0; }
-        .footer { background-color: #1e293b; color: #ffffff; padding: 30px; text-align: center; }
-        .footer p { margin: 5px 0; font-size: 14px; }
-        .footer a { color: #d4af37; text-decoration: none; }
-        .social-links { margin: 20px 0; }
-        .social-links a { display: inline-block; margin: 0 10px; }
-        .social-links img { width: 32px; height: 32px; }
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc; -webkit-font-smoothing: antialiased; }
+        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
+        .header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 40px 30px; text-align: center; border-bottom: 4px solid #3b82f6; }
+        .header img { max-width: 180px; height: auto; }
+        .content { padding: 45px 35px; color: #1e293b; line-height: 1.7; }
+        .content h1 { font-family: 'Poppins', sans-serif; color: #0f172a; font-size: 32px; font-weight: 700; margin: 0 0 24px 0; letter-spacing: -0.5px; }
+        .content h2 { font-family: 'Poppins', sans-serif; color: #1e293b; font-size: 22px; font-weight: 600; margin: 32px 0 16px 0; }
+        .content p { font-size: 16px; margin-bottom: 16px; color: #475569; }
+        .content strong { color: #1e293b; font-weight: 600; }
+        .cta-button { display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: #ffffff !important; padding: 16px 42px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 24px 0; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); font-size: 16px; transition: all 0.3s ease; }
+        .cta-button:hover { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4); }
+        .highlight-box { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-left: 4px solid #3b82f6; padding: 24px; margin: 24px 0; border-radius: 8px; }
+        .icon-feature { display: flex; align-items: start; margin: 16px 0; }
+        .icon-feature svg { width: 24px; height: 24px; margin-right: 12px; flex-shrink: 0; margin-top: 2px; }
+        .feature-list { margin: 20px 0; }
+        .feature-item { display: flex; align-items: center; margin: 12px 0; padding: 12px; background: #f8fafc; border-radius: 6px; }
+        .feature-item svg { width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0; }
+        .footer { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #cbd5e1; padding: 40px 30px; text-align: center; }
+        .footer p { margin: 8px 0; font-size: 14px; }
+        .footer a { color: #60a5fa; text-decoration: none; }
+        .footer a:hover { color: #93c5fd; text-decoration: underline; }
+        .divider { height: 1px; background: linear-gradient(90deg, transparent 0%, #e2e8f0 50%, transparent 100%); margin: 32px 0; }
+        .social-links { margin: 24px 0; }
+        .social-links a { display: inline-block; margin: 0 8px; width: 40px; height: 40px; background: #1e293b; border-radius: 50%; padding: 8px; transition: all 0.3s ease; }
+        .social-links a:hover { background: #3b82f6; transform: translateY(-2px); }
+        .social-links svg { width: 24px; height: 24px; fill: #cbd5e1; }
         @media only screen and (max-width: 600px) {
-            .content { padding: 20px 15px; }
-            .content h1 { font-size: 24px; }
-            .cta-button { padding: 12px 30px; }
+            .content { padding: 30px 20px; }
+            .content h1 { font-size: 26px; }
+            .cta-button { padding: 14px 32px; width: 100%; text-align: center; }
+            .header { padding: 30px 20px; }
         }
     </style>
 </head>
@@ -299,21 +288,22 @@
             const emailFooter = `
         </div>
         <div class="footer">
-            ${companyName ? `<p><strong>${companyName}</strong></p>` : ''}
-            ${companyAddress ? `<p>${companyAddress}</p>` : ''}
-            ${companyPhone ? `<p>Phone: ${companyPhone}</p>` : ''}
-            ${companyWebsite ? `<p>Website: <a href="${companyWebsite}">${companyWebsite}</a></p>` : ''}
+            ${companyName ? `<p style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">${companyName}</p>` : ''}
+            ${companyAddress ? `<p style="color: #94a3b8;">${companyAddress}</p>` : ''}
+            ${companyPhone ? `<p style="color: #94a3b8;">Phone: ${companyPhone}</p>` : ''}
+            ${companyWebsite ? `<p style="color: #94a3b8;">Website: <a href="${companyWebsite}" style="color: #60a5fa;">${companyWebsite}</a></p>` : ''}
             ${(facebookUrl || twitterUrl || linkedinUrl) ? `
             <div class="social-links">
-                ${facebookUrl ? `<a href="${facebookUrl}"><img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" alt="Facebook"></a>` : ''}
-                ${twitterUrl ? `<a href="${twitterUrl}"><img src="https://cdn-icons-png.flaticon.com/512/733/733579.png" alt="Twitter"></a>` : ''}
-                ${linkedinUrl ? `<a href="${linkedinUrl}"><img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" alt="LinkedIn"></a>` : ''}
+                ${facebookUrl ? `<a href="${facebookUrl}" title="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>` : ''}
+                ${twitterUrl ? `<a href="${twitterUrl}" title="Twitter"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg></a>` : ''}
+                ${linkedinUrl ? `<a href="${linkedinUrl}" title="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>` : ''}
             </div>` : ''}
-            <p style="font-size: 12px; color: #94a3b8; margin-top: 20px;">
-                This email was sent to {{email}}. If you no longer wish to receive these emails, 
-                <a href="${unsubscribeLink}" style="color: #d4af37;">unsubscribe here</a>.
+            <div class="divider" style="background: linear-gradient(90deg, transparent 0%, #334155 50%, transparent 100%);"></div>
+            <p style="font-size: 12px; color: #64748b; margin-top: 20px;">
+                This email was sent to <span style="color: #94a3b8;">{{email}}</span>. If you no longer wish to receive these emails, 
+                <a href="${unsubscribeLink}" style="color: #60a5fa;">unsubscribe here</a>.
             </p>
-            <p style="font-size: 12px; color: #64748b;">© ${new Date().getFullYear()} ${companyName}. All rights reserved.</p>
+            <p style="font-size: 12px; color: #475569;">© ${new Date().getFullYear()} ${companyName}. All rights reserved.</p>
         </div>
     </div>
 </body>
@@ -324,152 +314,384 @@
             switch(type) {
                 case 'marketing':
                     htmlBody = emailHeader + `
-            <h1>Hello {{name}}! 👋</h1>
-            <p>We're excited to share something special with you today!</p>
+            <h1>Hello {{name}}, Welcome to Excellence</h1>
+            <p style="font-size: 18px; color: #475569;">We're excited to share something special with you today that will transform the way you work.</p>
             
             <div class="highlight-box">
-                <h2>Why Choose Us?</h2>
-                <p>✓ Industry-leading solutions</p>
-                <p>✓ Trusted by thousands of customers</p>
-                <p>✓ 24/7 dedicated support</p>
-                <p>✓ Proven track record of success</p>
+                <h2 style="margin-top: 0; display: flex; align-items: center;">
+                    <i class="fas fa-check-circle" style="color: #3b82f6; font-size: 28px; margin-right: 12px;"></i>
+                    Why Choose Us?
+                </h2>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <i class="fas fa-circle-check" style="color: #3b82f6; font-size: 20px;"></i>
+                        <span><strong>Industry-leading solutions</strong> powered by cutting-edge technology</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-users" style="color: #3b82f6; font-size: 20px;"></i>
+                        <span><strong>Trusted by 50,000+ customers</strong> worldwide</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-headset" style="color: #3b82f6; font-size: 20px;"></i>
+                        <span><strong>24/7 dedicated support</strong> from our expert team</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-star" style="color: #3b82f6; font-size: 20px;"></i>
+                        <span><strong>Award-winning platform</strong> with proven results</span>
+                    </div>
+                </div>
             </div>
             
-            <p>We believe in delivering exceptional value to our customers, and we're confident you'll love what we have to offer.</p>
+            <p>We believe in delivering exceptional value to our customers, and we're confident you'll love what we have to offer. Join thousands of satisfied customers who have transformed their business with our solutions.</p>
             
             <p style="text-align: center;">
-                <a href="{{link}}" class="cta-button">Learn More</a>
+                <a href="{{link}}" class="cta-button">Learn More About Our Solutions</a>
             </p>
             
-            <p>Have questions? Our team is here to help! Simply reply to this email or contact us anytime.</p>
+            <div class="divider"></div>
             
-            <p>Best regards,<br>The ${companyName} Team</p>
+            <p style="font-size: 15px; color: #64748b;">Have questions? Our team is here to help! Simply reply to this email or contact us anytime.</p>
+            
+            <p style="margin-top: 32px;"><strong>Best regards,</strong><br><span style="color: #3b82f6; font-weight: 600;">The ${companyName} Team</span></p>
 ` + emailFooter;
                     break;
 
                 case 'newsletter':
                     htmlBody = emailHeader + `
-            <h1>📰 Your Monthly Update</h1>
-            <p>Hi {{name}},</p>
-            <p>Here's what's new this month at ${companyName}!</p>
+            <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 6px 16px; border-radius: 6px; display: inline-block; margin-bottom: 24px;">
+                <span style="color: white; font-weight: 600; font-size: 14px;">Monthly Newsletter</span>
+            </div>
+            <h1>Your Monthly Update</h1>
+            <p style="font-size: 18px; color: #475569;">Hi {{name}},</p>
+            <p style="font-size: 17px;">Here's what's new this month at ${companyName}! We've packed this edition with insights, updates, and resources to help you succeed.</p>
             
-            <h2>🎯 Feature Highlights</h2>
+            <div class="divider"></div>
+            
+            <h2 style="display: flex; align-items: center;">
+                <i class="fas fa-rocket" style="color: #3b82f6; font-size: 26px; margin-right: 10px;"></i>
+                Feature Highlights
+            </h2>
             <div class="highlight-box">
-                <p><strong>New Feature Launch:</strong> We've just released {{product}} - designed to make your life easier.</p>
+                <p style="font-size: 17px; margin-bottom: 8px;"><strong style="color: #1e293b;">New Feature Launch:</strong></p>
+                <p style="margin-bottom: 0;">We've just released <strong style="color: #3b82f6;">{{product}}</strong> - designed to streamline your workflow and boost productivity. This powerful addition includes advanced automation, real-time collaboration, and intuitive controls.</p>
             </div>
             
-            <h2>📚 Latest Blog Posts</h2>
-            <p>• <a href="{{link}}">How to Maximize Your Productivity</a></p>
-            <p>• <a href="{{link}}">Industry Trends You Need to Know</a></p>
-            <p>• <a href="{{link}}">Customer Success Stories</a></p>
+            <h2 style="display: flex; align-items: center;">
+                <i class="fas fa-newspaper" style="color: #3b82f6; font-size: 26px; margin-right: 10px;"></i>
+                Latest Articles & Resources
+            </h2>
+            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0;">
+                    <div style="display: flex; align-items: start;">
+                        <i class="fas fa-file-alt" style="color: #3b82f6; font-size: 20px; margin-right: 12px; margin-top: 2px;"></i>
+                        <div>
+                            <a href="{{link}}" style="color: #1e293b; font-weight: 600; text-decoration: none; font-size: 16px;">How to Maximize Your Productivity in 2025</a>
+                            <p style="margin: 4px 0 0 0; font-size: 14px; color: #64748b;">Expert strategies and proven techniques</p>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0;">
+                    <div style="display: flex; align-items: start;">
+                        <i class="fas fa-file-alt" style="color: #3b82f6; font-size: 20px; margin-right: 12px; margin-top: 2px;"></i>
+                        <div>
+                            <a href="{{link}}" style="color: #1e293b; font-weight: 600; text-decoration: none; font-size: 16px;">Industry Trends You Need to Know</a>
+                            <p style="margin: 4px 0 0 0; font-size: 14px; color: #64748b;">Stay ahead of the competition</p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div style="display: flex; align-items: start;">
+                        <i class="fas fa-file-alt" style="color: #3b82f6; font-size: 20px; margin-right: 12px; margin-top: 2px;"></i>
+                        <div>
+                            <a href="{{link}}" style="color: #1e293b; font-weight: 600; text-decoration: none; font-size: 16px;">Customer Success Stories</a>
+                            <p style="margin: 4px 0 0 0; font-size: 14px; color: #64748b;">Real results from real businesses</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
-            <h2>💡 Tips & Tricks</h2>
-            <p>Did you know? You can save time by using our advanced features. Check out our <a href="{{link}}">knowledge base</a> for more tips.</p>
+            <h2 style="display: flex; align-items: center;">
+                <i class="fas fa-lightbulb" style="color: #3b82f6; font-size: 26px; margin-right: 10px;"></i>
+                Pro Tips & Best Practices
+            </h2>
+            <p><strong>Did you know?</strong> You can save up to 5 hours per week by leveraging our advanced automation features. Here are some quick wins:</p>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <i class="fas fa-check-circle" style="color: #3b82f6; font-size: 20px;"></i>
+                    <span>Set up automated workflows for repetitive tasks</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check-circle" style="color: #3b82f6; font-size: 20px;"></i>
+                    <span>Use keyboard shortcuts to navigate faster</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check-circle" style="color: #3b82f6; font-size: 20px;"></i>
+                    <span>Integrate with your favorite tools for seamless workflow</span>
+                </div>
+            </div>
+            <p style="margin-top: 16px;">Check out our <a href="{{link}}" style="color: #3b82f6; text-decoration: none; font-weight: 600;">knowledge base</a> for comprehensive guides and tutorials.</p>
             
-            <p style="text-align: center; margin-top: 30px;">
-                <a href="{{link}}" class="cta-button">Read Full Newsletter</a>
+            <p style="text-align: center; margin-top: 40px;">
+                <a href="{{link}}" class="cta-button">View Full Newsletter</a>
             </p>
             
-            <p>Stay tuned for more updates!<br>The ${companyName} Team</p>
+            <div class="divider"></div>
+            
+            <p style="margin-top: 32px;"><strong>Stay tuned for more updates!</strong><br><span style="color: #3b82f6; font-weight: 600;">The ${companyName} Team</span></p>
 ` + emailFooter;
                     break;
 
                 case 'promotional':
                     htmlBody = emailHeader + `
-            <h1>🎉 Exclusive Offer Just for You!</h1>
-            <p>Hi {{name}},</p>
-            <p>We're thrilled to offer you an exclusive promotion that you won't want to miss!</p>
+            <div style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); padding: 6px 16px; border-radius: 6px; display: inline-block; margin-bottom: 24px;">
+                <span style="color: white; font-weight: 600; font-size: 14px;">Limited Time Offer</span>
+            </div>
+            <h1>Exclusive Offer Just for You!</h1>
+            <p style="font-size: 18px; color: #475569;">Hi {{name}},</p>
+            <p style="font-size: 17px;">We're thrilled to offer you an exclusive promotion that you won't want to miss! As a valued customer, you get first access to this incredible deal.</p>
             
-            <div class="highlight-box" style="text-align: center; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-left: 4px solid #d4af37;">
-                <h2 style="font-size: 32px; margin: 10px 0; color: #92400e;">🔥 LIMITED TIME OFFER 🔥</h2>
-                <p style="font-size: 24px; font-weight: bold; color: #92400e;">Save 50% on {{product}}</p>
-                <p style="font-size: 18px; color: #92400e;">Use code: <strong>SAVE50</strong></p>
+            <div style="text-align: center; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 3px solid #f59e0b; padding: 40px 30px; margin: 32px 0; border-radius: 12px; box-shadow: 0 8px 16px rgba(245, 158, 11, 0.2);">
+                <div style="display: inline-block; background: #dc2626; color: white; padding: 8px 20px; border-radius: 20px; font-weight: 700; font-size: 14px; letter-spacing: 0.5px; margin-bottom: 16px;">
+                    <i class="fas fa-star" style="font-size: 16px; vertical-align: middle; margin-right: 6px;"></i>
+                    LIMITED TIME OFFER
+                </div>
+                <h2 style="font-size: 42px; margin: 16px 0; color: #92400e; font-family: 'Poppins', sans-serif; font-weight: 700; line-height: 1.2;">Save 50% on<br>{{product}}</h2>
+                <div style="background: white; display: inline-block; padding: 16px 32px; border-radius: 8px; margin-top: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                    <p style="font-size: 14px; color: #64748b; margin: 0 0 4px 0; font-weight: 500;">Use Promo Code</p>
+                    <p style="font-size: 32px; color: #dc2626; margin: 0; font-weight: 700; font-family: 'Courier New', monospace; letter-spacing: 2px;">SAVE50</p>
+                </div>
             </div>
             
-            <p><strong>Why act now?</strong></p>
-            <p>✓ Exclusive discount for valued customers<br>
-               ✓ Limited quantities available<br>
-               ✓ Offer expires in 48 hours<br>
-               ✓ Free shipping on all orders</p>
+            <h2 style="display: flex; align-items: center;">
+                <i class="fas fa-info-circle" style="color: #3b82f6; font-size: 26px; margin-right: 10px;"></i>
+                Why Act Now?
+            </h2>
+            <div class="feature-list">
+                <div class="feature-item" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-left: 3px solid #22c55e;">
+                    <i class="fas fa-circle-check" style="color: #22c55e; font-size: 20px;"></i>
+                    <span><strong>Exclusive discount</strong> for valued customers like you</span>
+                </div>
+                <div class="feature-item" style="background: linear-gradient(135deg, #fef3c7 0%, #fef08a 100%); border-left: 3px solid #eab308;">
+                    <i class="fas fa-clock" style="color: #eab308; font-size: 20px;"></i>
+                    <span><strong>Limited quantities available</strong> - First come, first served</span>
+                </div>
+                <div class="feature-item" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-left: 3px solid #dc2626;">
+                    <i class="fas fa-hourglass-half" style="color: #dc2626; font-size: 20px;"></i>
+                    <span><strong>Offer expires in 48 hours</strong> - Don't wait!</span>
+                </div>
+                <div class="feature-item" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-left: 3px solid #3b82f6;">
+                    <i class="fas fa-truck" style="color: #3b82f6; font-size: 20px;"></i>
+                    <span><strong>Free shipping</strong> on all orders - No hidden fees</span>
+                </div>
+            </div>
             
-            <p style="text-align: center;">
-                <a href="{{link}}" class="cta-button" style="font-size: 18px;">Claim Your Discount Now</a>
+            <p style="text-align: center; margin-top: 40px;">
+                <a href="{{link}}" class="cta-button" style="font-size: 18px; padding: 18px 48px;">Claim Your 50% Discount Now</a>
             </p>
             
-            <p style="text-align: center; color: #dc2626; font-size: 14px;">⏰ Hurry! Offer ends soon</p>
+            <div style="text-align: center; background: #fef2f2; padding: 16px; border-radius: 8px; margin-top: 32px; border-left: 4px solid #dc2626;">
+                <i class="fas fa-clock" style="color: #dc2626; font-size: 24px; vertical-align: middle; margin-right: 8px;"></i>
+                <span style="color: #dc2626; font-size: 16px; font-weight: 600;">Hurry! This offer ends soon</span>
+            </div>
             
-            <p>Don't miss out on this incredible opportunity!<br>The ${companyName} Team</p>
+            <div class="divider"></div>
+            
+            <p style="font-size: 17px;">Don't miss out on this incredible opportunity to save big!</p>
+            <p style="margin-top: 32px;"><strong>Best regards,</strong><br><span style="color: #3b82f6; font-weight: 600;">The ${companyName} Team</span></p>
 ` + emailFooter;
                     break;
 
                 case 'welcome':
                     htmlBody = emailHeader + `
-            <h1>Welcome to ${companyName}! 🎊</h1>
-            <p>Hi {{name}},</p>
-            <p>We're absolutely thrilled to have you join our community! Thank you for choosing ${companyName}.</p>
+            <div style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); padding: 6px 16px; border-radius: 6px; display: inline-block; margin-bottom: 24px;">
+                <span style="color: white; font-weight: 600; font-size: 14px;">Welcome!</span>
+            </div>
+            <h1>Welcome to ${companyName}!</h1>
+            <p style="font-size: 18px; color: #475569;">Hi {{name}},</p>
+            <p style="font-size: 17px;">We're absolutely thrilled to have you join our community! Thank you for choosing ${companyName} - you've just taken the first step toward transforming your workflow and achieving more.</p>
             
-            <div class="highlight-box">
-                <h2>🚀 Get Started in 3 Easy Steps:</h2>
-                <p><strong>1.</strong> Complete your profile to personalize your experience</p>
-                <p><strong>2.</strong> Explore our features and discover what we offer</p>
-                <p><strong>3.</strong> Join our community and connect with others</p>
+            <div style="text-align: center; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 30px; border-radius: 12px; margin: 32px 0;">
+                <i class="fas fa-check-circle" style="color: #3b82f6; font-size: 80px; margin-bottom: 16px;"></i>
+                <p style="font-size: 20px; color: #1e293b; margin: 0; font-weight: 600;">Your account is ready to go!</p>
             </div>
             
-            <h2>What You Can Expect:</h2>
-            <p>✓ Regular updates and exclusive content<br>
-               ✓ Priority customer support<br>
-               ✓ Access to premium features<br>
-               ✓ Special offers and promotions</p>
+            <div class="highlight-box">
+                <h2 style="margin-top: 0; display: flex; align-items: center;">
+                    <i class="fas fa-rocket" style="color: #3b82f6; font-size: 28px; margin-right: 12px;"></i>
+                    Get Started in 3 Easy Steps
+                </h2>
+                <div style="margin-top: 20px;">
+                    <div style="display: flex; align-items: start; margin: 20px 0; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 16px; flex-shrink: 0;">1</div>
+                        <div>
+                            <p style="margin: 0; font-weight: 600; color: #1e293b; font-size: 16px;">Complete Your Profile</p>
+                            <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Personalize your experience and unlock all features</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: start; margin: 20px 0; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 16px; flex-shrink: 0;">2</div>
+                        <div>
+                            <p style="margin: 0; font-weight: 600; color: #1e293b; font-size: 16px;">Explore Our Features</p>
+                            <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Discover powerful tools designed to help you succeed</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: start; margin: 20px 0; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 16px; flex-shrink: 0;">3</div>
+                        <div>
+                            <p style="margin: 0; font-weight: 600; color: #1e293b; font-size: 16px;">Join Our Community</p>
+                            <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Connect with thousands of users and share insights</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
-            <p style="text-align: center;">
-                <a href="{{link}}" class="cta-button">Complete Your Profile</a>
+            <h2 style="display: flex; align-items: center;">
+                <i class="fas fa-gift" style="color: #3b82f6; font-size: 26px; margin-right: 10px;"></i>
+                What You Can Expect
+            </h2>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <i class="fas fa-envelope" style="color: #3b82f6; font-size: 20px;"></i>
+                    <span><strong>Regular updates</strong> with exclusive content and insights</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-headset" style="color: #3b82f6; font-size: 20px;"></i>
+                    <span><strong>Priority customer support</strong> from our dedicated team</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-crown" style="color: #3b82f6; font-size: 20px;"></i>
+                    <span><strong>Access to premium features</strong> and advanced tools</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-tags" style="color: #3b82f6; font-size: 20px;"></i>
+                    <span><strong>Special offers and promotions</strong> throughout the year</span>
+                </div>
+            </div>
+            
+            <p style="text-align: center; margin-top: 40px;">
+                <a href="{{link}}" class="cta-button">Complete Your Profile & Get Started</a>
             </p>
             
-            <p>If you have any questions or need assistance, don't hesitate to reach out. We're here to help!</p>
+            <div class="divider"></div>
             
-            <p>Welcome aboard!<br>The ${companyName} Team</p>
+            <p style="font-size: 15px; color: #64748b;">If you have any questions or need assistance getting started, don't hesitate to reach out. Our support team is here to help you every step of the way!</p>
+            
+            <p style="margin-top: 32px;"><strong>Welcome aboard!</strong><br><span style="color: #3b82f6; font-weight: 600;">The ${companyName} Team</span></p>
 ` + emailFooter;
                     break;
 
                 case 'transactional':
                     htmlBody = emailHeader + `
+            <div style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); padding: 6px 16px; border-radius: 6px; display: inline-block; margin-bottom: 24px;">
+                <span style="color: white; font-weight: 600; font-size: 14px;">Order Confirmed</span>
+            </div>
             <h1>Order Confirmation</h1>
-            <p>Hi {{name}},</p>
-            <p>Thank you for your order! We're processing it now and will notify you once it ships.</p>
+            <p style="font-size: 18px; color: #475569;">Hi {{name}},</p>
+            <p style="font-size: 17px;">Thank you for your order! We've received your payment and are processing your order now. You'll receive a shipping confirmation email once your order is on its way.</p>
             
-            <div class="highlight-box">
-                <h2>Order Details</h2>
-                <p><strong>Order Number:</strong> #{{order_id}}</p>
-                <p><strong>Order Date:</strong> {{date}}</p>
-                <p><strong>Product:</strong> {{product}}</p>
-                <p><strong>Total:</strong> {{total}}</p>
+            <div style="text-align: center; background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); padding: 30px; border-radius: 12px; margin: 32px 0;">
+                <i class="fas fa-check-circle" style="color: #22c55e; font-size: 80px; margin-bottom: 16px;"></i>
+                <p style="font-size: 20px; color: #1e293b; margin: 0; font-weight: 600;">Order Successfully Placed!</p>
             </div>
             
-            <h2>What's Next?</h2>
-            <p>1. You'll receive a shipping confirmation email once your order ships<br>
-               2. Track your order anytime using your order number<br>
-               3. Contact us if you have any questions</p>
+            <div class="highlight-box" style="background: white; border: 2px solid #e2e8f0;">
+                <h2 style="margin-top: 0; display: flex; align-items: center; color: #1e293b;">
+                    <i class="fas fa-clipboard-list" style="color: #3b82f6; font-size: 28px; margin-right: 12px;"></i>
+                    Order Details
+                </h2>
+                <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-top: 20px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 12px 0; color: #64748b; font-size: 14px;">Order Number:</td>
+                            <td style="padding: 12px 0; text-align: right; font-weight: 600; color: #1e293b; font-size: 15px;">#{{order_id}}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 12px 0; color: #64748b; font-size: 14px;">Order Date:</td>
+                            <td style="padding: 12px 0; text-align: right; font-weight: 600; color: #1e293b; font-size: 15px;">{{date}}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 12px 0; color: #64748b; font-size: 14px;">Product:</td>
+                            <td style="padding: 12px 0; text-align: right; font-weight: 600; color: #1e293b; font-size: 15px;">{{product}}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 12px 0; color: #64748b; font-size: 14px;">Total Amount:</td>
+                            <td style="padding: 12px 0; text-align: right; font-weight: 700; color: #22c55e; font-size: 18px;">{{total}}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
             
-            <p style="text-align: center;">
+            <h2 style="display: flex; align-items: center;">
+                <i class="fas fa-tasks" style="color: #3b82f6; font-size: 26px; margin-right: 10px;"></i>
+                What Happens Next?
+            </h2>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; margin-right: 12px; flex-shrink: 0;">1</div>
+                    <span>You'll receive a <strong>shipping confirmation email</strong> once your order ships</span>
+                </div>
+                <div class="feature-item">
+                    <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; margin-right: 12px; flex-shrink: 0;">2</div>
+                    <span><strong>Track your order</strong> anytime using your order number</span>
+                </div>
+                <div class="feature-item">
+                    <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; margin-right: 12px; flex-shrink: 0;">3</div>
+                    <span><strong>Contact us</strong> if you have any questions or concerns</span>
+                </div>
+            </div>
+            
+            <p style="text-align: center; margin-top: 40px;">
                 <a href="{{link}}" class="cta-button">Track Your Order</a>
             </p>
             
-            <p>Thank you for your business!<br>The ${companyName} Team</p>
+            <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6; margin-top: 32px;">
+                <p style="margin: 0; color: #1e293b;"><strong>Need Help?</strong></p>
+                <p style="margin: 8px 0 0 0; color: #475569; font-size: 15px;">Our customer support team is available 24/7. Reply to this email or visit our help center for assistance.</p>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <p style="margin-top: 32px;"><strong>Thank you for your business!</strong><br><span style="color: #3b82f6; font-weight: 600;">The ${companyName} Team</span></p>
 ` + emailFooter;
                     break;
 
                 default:
                     htmlBody = emailHeader + `
             <h1>Hello {{name}}!</h1>
-            <p>Welcome to our email.</p>
+            <p style="font-size: 18px; color: #475569;">Welcome to our professional email template.</p>
             
-            <p>Add your content here...</p>
+            <div class="highlight-box">
+                <h2 style="margin-top: 0;">Your Custom Content Goes Here</h2>
+                <p>Replace this section with your own content. You can use the following placeholders:</p>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <i class="fas fa-check-circle" style="color: #3b82f6; font-size: 20px;"></i>
+                        <span><code style="background: #f1f5f9; padding: 2px 8px; border-radius: 4px; color: #dc2626;">{{name}}</code> - Recipient's name</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check-circle" style="color: #3b82f6; font-size: 20px;"></i>
+                        <span><code style="background: #f1f5f9; padding: 2px 8px; border-radius: 4px; color: #dc2626;">{{email}}</code> - Recipient's email</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check-circle" style="color: #3b82f6; font-size: 20px;"></i>
+                        <span><code style="background: #f1f5f9; padding: 2px 8px; border-radius: 4px; color: #dc2626;">{{company}}</code> - Company name</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check-circle" style="color: #3b82f6; font-size: 20px;"></i>
+                        <span><code style="background: #f1f5f9; padding: 2px 8px; border-radius: 4px; color: #dc2626;">{{link}}</code> - Custom link</span>
+                    </div>
+                </div>
+            </div>
             
-            <p style="text-align: center;">
+            <p>This is a professionally designed email template with modern styling, responsive design, and clean typography. Customize it to match your brand and messaging needs.</p>
+            
+            <p style="text-align: center; margin-top: 40px;">
                 <a href="{{link}}" class="cta-button">Take Action</a>
             </p>
             
-            <p>Best regards,<br>The ${companyName} Team</p>
+            <div class="divider"></div>
+            
+            <p style="margin-top: 32px;"><strong>Best regards,</strong><br><span style="color: #3b82f6; font-weight: 600;">The ${companyName} Team</span></p>
 ` + emailFooter;
             }
 
@@ -517,11 +739,4 @@
             }
         }
     </script>
-
-    <footer>
-        <div class="container">
-            <p>Made with <span class="footer-heart">♥</span> by <a href="https://tomnyambu.dev" target="_blank">Tom Nyambu</a></p>
-        </div>
-    </footer>
-</body>
-</html>
+{% endblock %}

@@ -37,6 +37,14 @@ def execute_scheduled_job(job_id: int, db_url: str):
         # Parse recipients
         recipients = json.loads(job.recipient_emails)
         
+        # Parse custom placeholders if present
+        custom_placeholders = {}
+        if job.custom_data:
+            try:
+                custom_placeholders = json.loads(job.custom_data)
+            except:
+                pass
+        
         # Send emails
         email_service = EmailService(db)
         results = email_service.send_bulk(
@@ -46,7 +54,8 @@ def execute_scheduled_job(job_id: int, db_url: str):
             text_body=template.text_body,
             template_id=template.id,
             scheduled_job_id=job.id,
-            user_id=job.user_id
+            user_id=job.user_id,
+            custom_placeholders=custom_placeholders
         )
         
         # Update job

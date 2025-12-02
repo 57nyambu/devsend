@@ -1,39 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Send Email - DevSend</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/static/styles.css" rel="stylesheet">
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/dashboard">DevSend</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="/send">Send Now</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/recipients">Recipients</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/templates">Templates</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/jobs">Scheduled Jobs</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/senders">Senders</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/api-keys">API Keys</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/logs">Logs</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/profile">Profile</a></li>
-                </ul>
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+{% extends "base.html" %}
 
+{% block title %}Send Email - DevSend{% endblock %}
+
+{% block content %}
     <div class="container mt-4">
         <div class="page-header">
             <div>
@@ -60,11 +29,30 @@
                                 <select class="form-select" name="template_id" id="templateSelect" required>
                                     <option value="">Choose a template...</option>
                                     {% for template in templates %}
-                                    <option value="{{ template.id }}" data-subject="{{ template.subject }}" data-body="{{ template.html_body }}">
+                                    <option value="{{ template.id }}" data-subject="{{ template.subject }}" data-body="{{ template.html_body }}" data-placeholders='{{ template.placeholders | tojson }}'>
                                         {{ template.name }}
                                     </option>
                                     {% endfor %}
                                 </select>
+                            </div>
+
+                            <div id="personalizationSection" class="mb-4 d-none">
+                                <div class="card" style="border-left: 4px solid #3b82f6;">
+                                    <div class="card-body">
+                                        <h6 class="card-title d-flex align-items-center">
+                                            <i class="fas fa-magic me-2 text-primary"></i>
+                                            Personalization Settings
+                                        </h6>
+                                        <p class="text-muted small mb-3">Define default values for placeholders. These will be used when recipient data doesn't have these fields.</p>
+                                        <div id="placeholderFields" class="row g-3">
+                                            <!-- Dynamic placeholder fields will be inserted here -->
+                                        </div>
+                                        <div class="alert alert-info mt-3 mb-0" style="font-size: 0.875rem;">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            <strong>Note:</strong> Values like <code>{{name}}</code> and <code>{{email}}</code> will automatically use recipient data. Other placeholders will use the values you provide above.
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="mb-4">
@@ -98,9 +86,7 @@
                                                 </div>
                                                 <div class="card-footer bg-white border-top py-2">
                                                     <button type="button" class="btn btn-sm btn-outline-primary w-100" onclick="addAllRecipients()">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-arrow-right me-1" viewBox="0 0 16 16">
-                                                            <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/>
-                                                        </svg>
+                                                        <i class="fas fa-arrow-right me-1"></i>
                                                         Add All
                                                     </button>
                                                 </div>
@@ -118,9 +104,7 @@
                                                 <div class="card-body p-0" style="max-height: 300px; overflow-y: auto;">
                                                     <div id="selectedList" class="list-group list-group-flush">
                                                         <div class="text-center text-muted py-5">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-inbox mb-2 opacity-25" viewBox="0 0 16 16">
-                                                                <path d="M4.98 4a.5.5 0 0 0-.39.188L1.54 8H6a.5.5 0 0 1 .5.5 1.5 1.5 0 1 0 3 0A.5.5 0 0 1 10 8h4.46l-3.05-3.812A.5.5 0 0 0 11.02 4zm9.954 5H10.45a2.5 2.5 0 0 1-4.9 0H1.066l.32 2.562a.5.5 0 0 0 .497.438h12.234a.5.5 0 0 0 .496-.438zM3.809 3.563A1.5 1.5 0 0 1 4.981 3h6.038a1.5 1.5 0 0 1 1.172.563l3.7 4.625a.5.5 0 0 1 .105.374l-.39 3.124A1.5 1.5 0 0 1 14.117 13H1.883a1.5 1.5 0 0 1-1.489-1.314l-.39-3.124a.5.5 0 0 1 .106-.374z"/>
-                                                            </svg>
+                                                            <i class="fas fa-inbox mb-2 opacity-25" style="font-size: 48px;"></i>
                                                             <p class="mb-0 small">No recipients selected</p>
                                                         </div>
                                                     </div>
@@ -187,9 +171,9 @@
             </div>
         </div>
     </div>
+{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/app.js"></script>
+{% block extra_scripts %}
     <script>
         // Load sender profiles on page load
         async function loadSenderProfiles() {
@@ -272,10 +256,7 @@
                         <div class="fw-semibold">${recipient.name || recipient.email}</div>
                         ${recipient.name ? `<small class="text-muted">${recipient.email}</small>` : ''}
                     </div>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle text-success" viewBox="0 0 16 16">
-                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-                    </svg>
+                    <i class="fas fa-plus-circle text-success"></i>
                 </a>
             `).join('');
         }
@@ -290,9 +271,7 @@
             if (selectedRecipients.length === 0) {
                 selectedList.innerHTML = `
                     <div class="text-center text-muted py-5">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-inbox mb-2 opacity-25" viewBox="0 0 16 16">
-                            <path d="M4.98 4a.5.5 0 0 0-.39.188L1.54 8H6a.5.5 0 0 1 .5.5 1.5 1.5 0 1 0 3 0A.5.5 0 0 1 10 8h4.46l-3.05-3.812A.5.5 0 0 0 11.02 4zm9.954 5H10.45a2.5 2.5 0 0 1-4.9 0H1.066l.32 2.562a.5.5 0 0 0 .497.438h12.234a.5.5 0 0 0 .496-.438zM3.809 3.563A1.5 1.5 0 0 1 4.981 3h6.038a1.5 1.5 0 0 1 1.172.563l3.7 4.625a.5.5 0 0 1 .105.374l-.39 3.124A1.5 1.5 0 0 1 14.117 13H1.883a1.5 1.5 0 0 1-1.489-1.314l-.39-3.124a.5.5 0 0 1 .106-.374z"/>
-                        </svg>
+                        <i class="fas fa-inbox mb-2 opacity-25" style="font-size: 48px;"></i>
                         <p class="mb-0 small">No recipients selected</p>
                     </div>
                 `;
@@ -306,10 +285,7 @@
                         ${recipient.name ? `<small class="text-muted">${recipient.email}</small>` : ''}
                     </div>
                     <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="removeRecipient('${recipient.email}')" style="text-decoration: none;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
-                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
-                        </svg>
+                        <i class="fas fa-times-circle" style="font-size: 20px;"></i>
                     </button>
                 </div>
             `).join('');
@@ -382,18 +358,49 @@
             });
         });
 
-        // Preview template on selection
+        // Send formemplate on selection
         document.getElementById('templateSelect').addEventListener('change', (e) => {
             const option = e.target.options[e.target.selectedIndex];
             const subject = option.dataset.subject;
             const body = option.dataset.body;
+            const placeholders = option.dataset.placeholders ? JSON.parse(option.dataset.placeholders) : [];
             
             if (subject && body) {
                 document.getElementById('previewSubject').textContent = subject;
                 document.getElementById('previewBody').innerHTML = body;
                 document.getElementById('preview').classList.remove('d-none');
+                
+                // Show personalization section and create fields for placeholders
+                const personalizationSection = document.getElementById('personalizationSection');
+                const placeholderFields = document.getElementById('placeholderFields');
+                
+                if (placeholders && placeholders.length > 0) {
+                    // Filter out common recipient fields
+                    const customPlaceholders = placeholders.filter(p => 
+                        !['name', 'email'].includes(p.toLowerCase())
+                    );
+                    
+                    if (customPlaceholders.length > 0) {
+                        placeholderFields.innerHTML = customPlaceholders.map(placeholder => `
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">
+                                    <code class="text-danger">{{ '{{' }}${placeholder}{{ '}}' }}</code>
+                                </label>
+                                <input type="text" class="form-control form-control-sm" 
+                                       name="placeholder_${placeholder}" 
+                                       placeholder="Default value for ${placeholder}">
+                            </div>
+                        `).join('');
+                        personalizationSection.classList.remove('d-none');
+                    } else {
+                        personalizationSection.classList.add('d-none');
+                    }
+                } else {
+                    personalizationSection.classList.add('d-none');
+                }
             } else {
                 document.getElementById('preview').classList.add('d-none');
+                document.getElementById('personalizationSection').classList.add('d-none');
             }
         });
 
@@ -437,11 +444,4 @@
             }
         });
     </script>
-
-    <footer>
-        <div class="container">
-            <p>Made with <span class="footer-heart">♥</span> by <a href="https://tomnyambu.dev" target="_blank">Tom Nyambu</a></p>
-        </div>
-    </footer>
-</body>
-</html>
+{% endblock %}

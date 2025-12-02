@@ -149,7 +149,8 @@ class EmailService:
         template_id: Optional[int] = None,
         scheduled_job_id: Optional[int] = None,
         personalize: bool = True,
-        user_id: Optional[int] = None
+        user_id: Optional[int] = None,
+        custom_placeholders: Optional[Dict[str, str]] = None
     ) -> Dict[str, int]:
         """Send to multiple recipients"""
         results = {"sent": 0, "failed": 0}
@@ -157,7 +158,11 @@ class EmailService:
         for email in recipient_emails:
             variables = {}
             
-            # Get recipient data for personalization
+            # Start with custom placeholder defaults
+            if custom_placeholders:
+                variables.update(custom_placeholders)
+            
+            # Get recipient data for personalization (this overrides defaults)
             if personalize:
                 query = self.db.query(Recipient).filter(Recipient.email == email)
                 if user_id:
@@ -165,16 +170,20 @@ class EmailService:
                 recipient = query.first()
                 
                 if recipient:
-                    variables["name"] = recipient.name or ""
+                    variables["name"] = recipient.name or variables.get("name", "")
                     variables["email"] = recipient.email
                     
-                    # Add custom fields
+                    # Add custom fields (these override defaults too)
                     if recipient.custom_fields:
                         try:
                             custom_data = json.loads(recipient.custom_fields)
                             variables.update(custom_data)
                         except:
                             pass
+            
+            # Ensure email is always set
+            if "email" not in variables:
+                variables["email"] = email
             
             success = self.send_email(
                 recipient_email=email,

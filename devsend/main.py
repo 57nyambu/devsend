@@ -54,6 +54,23 @@ templates = Jinja2Templates(directory="devsend/templates")
 app.mount("/static", StaticFiles(directory="devsend/static"), name="static")
 
 
+# Custom exception handler for authentication errors
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    # For 401 Unauthorized, redirect to login for HTML requests, return JSON for API requests
+    if exc.status_code == 401:
+        # Check if this is an HTML request (browser) vs API request
+        accept_header = request.headers.get("accept", "")
+        if "text/html" in accept_header or (request.url.path.startswith("/") and not request.url.path.startswith("/api/")):
+            return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+    
+    # For API requests or other errors, return JSON
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail}
+    )
+
+
 # Auth endpoints
 @app.get("/", response_class=HTMLResponse)
 async def login_page(request: Request):
@@ -162,6 +179,7 @@ async def dashboard(request: Request, current_user: dict = Depends(get_current_u
     
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
+        "active_page": "dashboard",
         "total_recipients": total_recipients,
         "total_templates": total_templates,
         "total_jobs": total_jobs,
@@ -176,7 +194,11 @@ async def recipients_page(request: Request, current_user: dict = Depends(get_cur
     recipients = db.query(Recipient).filter(
         Recipient.user_id == user_id
     ).order_by(Recipient.created_at.desc()).all()
-    return templates.TemplateResponse("recipients.html", {"request": request, "recipients": recipients})
+    return templates.TemplateResponse("recipients.html", {
+        "request": request,
+        "active_page": "recipients",
+        "recipients": recipients
+    })
 
 
 @app.get("/api/recipients")
@@ -233,7 +255,11 @@ async def templates_page(request: Request, current_user: dict = Depends(get_curr
     email_templates = db.query(EmailTemplate).filter(
         EmailTemplate.user_id == user_id
     ).order_by(EmailTemplate.created_at.desc()).all()
-    return templates.TemplateResponse("templates.html", {"request": request, "templates": email_templates})
+    return templates.TemplateResponse("templates.html", {
+        "request": request,
+        "active_page": "templates",
+        "templates": email_templates
+    })
 
 
 @app.post("/api/templates")
@@ -300,7 +326,11 @@ async def api_keys_page(request: Request, current_user: dict = Depends(get_curre
     api_keys = db.query(ApiKey).filter(
         ApiKey.user_id == user_id
     ).order_by(ApiKey.created_at.desc()).all()
-    return templates.TemplateResponse("api_keys.html", {"request": request, "api_keys": api_keys})
+    return templates.TemplateResponse("api_keys.html", {
+        "request": request,
+        "active_page": "api-keys",
+        "api_keys": api_keys
+    })
 
 
 @app.post("/api/api-keys")
@@ -339,11 +369,17 @@ async def jobs_page(request: Request, current_user: dict = Depends(get_current_u
         ScheduledJob.user_id == user_id
     ).order_by(ScheduledJob.created_at.desc()).all()
     templates_list = db.query(EmailTemplate).filter(EmailTemplate.user_id == user_id).all()
-    return templates.TemplateResponse("jobs.html", {"request": request, "jobs": jobs, "templates": templates_list})
+    return templates.TemplateResponse("jobs.html", {
+        "request": request,
+        "active_page": "jobs",
+        "jobs": jobs,
+        "templates": templates_list
+    })
 
 
 @app.post("/api/jobs")
 async def create_job(
+    request: Request,
     name: str = Form(...),
     template_id: int = Form(...),
     recipient_emails: str = Form(...),
@@ -363,6 +399,15 @@ async def create_job(
     if schedule_time:
         schedule_dt = datetime.fromisoformat(schedule_time.replace('Z', '+00:00'))
     
+    # Extract custom placeholder values from form
+    form_data = await request.form()
+    custom_placeholders = {}
+    for key, value in form_data.items():
+        if key.startswith("placeholder_"):
+            placeholder_name = key.replace("placeholder_", "")
+            if value.strip():  # Only include non-empty values
+                custom_placeholders[placeholder_name] = value.strip()
+    
     job = ScheduledJob(
         user_id=user_id,
         name=name,
@@ -371,7 +416,8 @@ async def create_job(
         schedule_type=schedule_type,
         schedule_time=schedule_dt,
         cron_expression=cron_expression,
-        next_run=schedule_dt
+        next_run=schedule_dt,
+        custom_data=json.dumps(custom_placeholders) if custom_placeholders else None
     )
     db.add(job)
     db.commit()
@@ -408,7 +454,11 @@ async def logs_page(request: Request, current_user: dict = Depends(get_current_u
     logs = db.query(EmailLog).filter(
         EmailLog.user_id == user_id
     ).order_by(EmailLog.created_at.desc()).limit(100).all()
-    return templates.TemplateResponse("logs.html", {"request": request, "logs": logs})
+    return templates.TemplateResponse("logs.html", {
+        "request": request,
+        "active_page": "logs",
+        "logs": logs
+    })
 
 
 # Send Email Now Page
@@ -421,7 +471,8 @@ async def send_page(request: Request, current_user: dict = Depends(get_current_u
         Recipient.is_active == True
     ).count()
     return templates.TemplateResponse("send.html", {
-        "request": request, 
+        "request": request,
+        "active_page": "send",
         "templates": email_templates,
         "recipients_count": recipients_count
     })
@@ -430,49 +481,65 @@ async def send_page(request: Request, current_user: dict = Depends(get_current_u
 # Send Email Now API
 @app.post("/api/send")
 async def send_email_now(
+    request: Request,
     template_id: int = Form(...),
     recipient_emails: str = Form(...),
     sender_profile_id: int = Form(...),
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    user_id = current_user["user_id"]
+    try:
+        user_id = current_user["user_id"]
+        
+        template = db.query(EmailTemplate).filter(
+            EmailTemplate.id == template_id,
+            EmailTemplate.user_id == user_id
+        ).first()
+        if not template:
+            raise HTTPException(status_code=404, detail="Template not found")
+        
+        # Verify sender profile exists and is verified
+        sender_profile = db.query(SenderProfile).filter(
+            SenderProfile.id == sender_profile_id,
+            SenderProfile.user_id == user_id
+        ).first()
+        if not sender_profile:
+            raise HTTPException(status_code=404, detail="Sender profile not found")
+        
+        if not sender_profile.is_verified:
+            raise HTTPException(status_code=400, detail=f"Sender profile '{sender_profile.name}' is not verified. Please verify the domain in Resend first.")
+        
+        emails = [e.strip() for e in recipient_emails.split(",") if e.strip()]
+        
+        if not emails:
+            raise HTTPException(status_code=400, detail="No valid email addresses provided")
+        
+        # Extract custom placeholder values from form
+        form_data = await request.form()
+        custom_placeholders = {}
+        for key, value in form_data.items():
+            if key.startswith("placeholder_"):
+                placeholder_name = key.replace("placeholder_", "")
+                if value.strip():  # Only include non-empty values
+                    custom_placeholders[placeholder_name] = value.strip()
     
-    template = db.query(EmailTemplate).filter(
-        EmailTemplate.id == template_id,
-        EmailTemplate.user_id == user_id
-    ).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="Template not found")
+        email_service = EmailService(db)
+        results = email_service.send_bulk(
+            recipient_emails=emails,
+            subject=template.subject,
+            html_body=template.html_body,
+            text_body=template.text_body,
+            template_id=template.id,
+            sender_profile_id=sender_profile_id,
+            user_id=user_id,
+            custom_placeholders=custom_placeholders
+        )
+        
+        return {"message": f"Sent: {results['sent']}, Failed: {results['failed']}", "results": results}
     
-    # Verify sender profile exists and is verified
-    sender_profile = db.query(SenderProfile).filter(
-        SenderProfile.id == sender_profile_id,
-        SenderProfile.user_id == user_id
-    ).first()
-    if not sender_profile:
-        raise HTTPException(status_code=404, detail="Sender profile not found")
-    
-    if not sender_profile.is_verified:
-        raise HTTPException(status_code=400, detail=f"Sender profile '{sender_profile.name}' is not verified. Please verify the domain in Resend first.")
-    
-    emails = [e.strip() for e in recipient_emails.split(",") if e.strip()]
-    
-    if not emails:
-        raise HTTPException(status_code=400, detail="No valid email addresses provided")
-    
-    email_service = EmailService(db)
-    results = email_service.send_bulk(
-        recipient_emails=emails,
-        subject=template.subject,
-        html_body=template.html_body,
-        text_body=template.text_body,
-        template_id=template.id,
-        sender_profile_id=sender_profile_id,
-        user_id=user_id
-    )
-    
-    return {"message": f"Sent: {results['sent']}, Failed: {results['failed']}", "results": results}
+    except Exception as e:
+        logger.error(f"Error in send_email_now: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error sending emails: {str(e)}")
 
 
 # Sender Profiles
@@ -482,7 +549,11 @@ async def senders_page(request: Request, current_user: dict = Depends(get_curren
     senders = db.query(SenderProfile).filter(
         SenderProfile.user_id == user_id
     ).order_by(SenderProfile.is_default.desc(), SenderProfile.created_at.desc()).all()
-    return templates.TemplateResponse("senders.html", {"request": request, "senders": senders})
+    return templates.TemplateResponse("senders.html", {
+        "request": request,
+        "active_page": "senders",
+        "senders": senders
+    })
 
 
 @app.get("/api/senders")
@@ -637,6 +708,7 @@ async def profile_page(request: Request, current_user: dict = Depends(get_curren
     
     return templates.TemplateResponse("profile.html", {
         "request": request,
+        "active_page": "profile",
         "user": user,
         "stats": stats
     })
