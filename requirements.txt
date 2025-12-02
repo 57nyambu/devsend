@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+sqlalchemy
+alembic
+resend
+apscheduler
+python-multipart
+jinja2
+python-dotenv
+passlib[bcrypt]
+python-jose
+pydantic
+pydantic-settings

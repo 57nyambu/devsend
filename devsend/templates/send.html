@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Email - DevSend</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/styles.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">DevSend</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/send">Send Now</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/recipients">Recipients</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/templates">Templates</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/jobs">Scheduled Jobs</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/senders">Senders</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/api-keys">API Keys</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/logs">Logs</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/profile">Profile</a></li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="page-header">
+            <div>
+                <h1>Send Email Now</h1>
+                <p class="text-muted mb-0">Send emails immediately using your templates</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body p-4">
+                        <form id="sendForm">
+                            <div class="mb-4">
+                                <label class="form-label">Sender Profile *</label>
+                                <select class="form-select" name="sender_profile_id" id="senderSelect" required>
+                                    <option value="">Loading sender profiles...</option>
+                                </select>
+                                <small class="text-muted">Select a verified sender email address</small>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">Select Template *</label>
+                                <select class="form-select" name="template_id" id="templateSelect" required>
+                                    <option value="">Choose a template...</option>
+                                    {% for template in templates %}
+                                    <option value="{{ template.id }}" data-subject="{{ template.subject }}" data-body="{{ template.html_body }}">
+                                        {{ template.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">Recipients *</label>
+                                <div class="btn-group w-100 mb-3" role="group">
+                                    <input type="radio" class="btn-check" name="recipientMode" id="manualMode" value="manual" checked>
+                                    <label class="btn btn-outline-primary" for="manualMode">Manual Entry</label>
+                                    
+                                    <input type="radio" class="btn-check" name="recipientMode" id="selectMode" value="select">
+                                    <label class="btn btn-outline-primary" for="selectMode">Select from Recipients</label>
+                                </div>
+                                
+                                <div id="manualEntry">
+                                    <textarea class="form-control" id="manualEmails" rows="3" 
+                                        placeholder="Enter email addresses (comma-separated)&#10;example@domain.com, another@domain.com"></textarea>
+                                    <small class="text-muted">Separate multiple emails with commas</small>
+                                </div>
+                                
+                                <div id="selectEntry" class="d-none">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="card h-100">
+                                                <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+                                                    <span class="fw-semibold text-muted" style="font-size: 0.85rem;">AVAILABLE RECIPIENTS</span>
+                                                    <div>
+                                                        <input type="text" id="searchAvailable" class="form-control form-control-sm" placeholder="Search..." style="width: 150px; display: inline-block;">
+                                                    </div>
+                                                </div>
+                                                <div class="card-body p-0" style="max-height: 300px; overflow-y: auto;">
+                                                    <div id="availableList" class="list-group list-group-flush"></div>
+                                                </div>
+                                                <div class="card-footer bg-white border-top py-2">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary w-100" onclick="addAllRecipients()">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-arrow-right me-1" viewBox="0 0 16 16">
+                                                            <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/>
+                                                        </svg>
+                                                        Add All
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="card h-100">
+                                                <div class="card-header d-flex justify-content-between align-items-center py-2" style="background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);">
+                                                    <span class="fw-semibold" style="font-size: 0.85rem; color: var(--darker);">SELECTED (<span id="selectedCount">0</span>)</span>
+                                                    <button type="button" class="btn btn-sm btn-link text-dark p-0" onclick="clearAllRecipients()" style="text-decoration: none; font-size: 0.85rem;">
+                                                        Clear All
+                                                    </button>
+                                                </div>
+                                                <div class="card-body p-0" style="max-height: 300px; overflow-y: auto;">
+                                                    <div id="selectedList" class="list-group list-group-flush">
+                                                        <div class="text-center text-muted py-5">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-inbox mb-2 opacity-25" viewBox="0 0 16 16">
+                                                                <path d="M4.98 4a.5.5 0 0 0-.39.188L1.54 8H6a.5.5 0 0 1 .5.5 1.5 1.5 0 1 0 3 0A.5.5 0 0 1 10 8h4.46l-3.05-3.812A.5.5 0 0 0 11.02 4zm9.954 5H10.45a2.5 2.5 0 0 1-4.9 0H1.066l.32 2.562a.5.5 0 0 0 .497.438h12.234a.5.5 0 0 0 .496-.438zM3.809 3.563A1.5 1.5 0 0 1 4.981 3h6.038a1.5 1.5 0 0 1 1.172.563l3.7 4.625a.5.5 0 0 1 .105.374l-.39 3.124A1.5 1.5 0 0 1 14.117 13H1.883a1.5 1.5 0 0 1-1.489-1.314l-.39-3.124a.5.5 0 0 1 .106-.374z"/>
+                                                            </svg>
+                                                            <p class="mb-0 small">No recipients selected</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">Click on recipients to add or remove them from your selection</small>
+                                </div>
+                                
+                                <input type="hidden" name="recipient_emails" id="finalRecipientEmails" required>
+                            </div>
+
+                            <div id="preview" class="mb-4 d-none">
+                                <label class="form-label">Preview</label>
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <p class="mb-2"><strong>Subject:</strong> <span id="previewSubject"></span></p>
+                                        <hr>
+                                        <div id="previewBody" style="max-height: 300px; overflow-y: auto;"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary" id="sendBtn">
+                                    Send Now
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="location.href='/dashboard'">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <div class="card-body">
+                        <h5 class="card-title">Quick Tips</h5>
+                        <ul class="mb-0" style="line-height: 1.8;">
+                            <li>Templates support placeholders like <code style="background: rgba(255,255,255,0.2); color: white;">{{name}}</code> and <code style="background: rgba(255,255,255,0.2); color: white;">{{email}}</code></li>
+                            <li>Send to multiple recipients at once</li>
+                            <li>Personalization happens automatically from recipient data</li>
+                            <li>Check the Logs page to track delivery status</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h6 class="card-title">Quick Stats</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Templates:</span>
+                            <strong>{{ templates|length }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Recipients:</span>
+                            <strong>{{ recipients_count }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/app.js"></script>
+    <script>
+        // Load sender profiles on page load
+        async function loadSenderProfiles() {
+            try {
+                const response = await fetch('/api/senders');
+                const senders = await response.json();
+                
+                const select = document.getElementById('senderSelect');
+                select.innerHTML = '<option value="">Choose a sender...</option>';
+                
+                senders.forEach(sender => {
+                    const option = document.createElement('option');
+                    option.value = sender.id;
+                    option.textContent = `${sender.display_name} <${sender.email}>`;
+                    
+                    if (!sender.is_verified) {
+                        option.textContent += ' (Not Verified)';
+                        option.style.color = '#dc3545';
+                    }
+                    
+                    if (sender.is_default) {
+                        option.selected = true;
+                    }
+                    
+                    select.appendChild(option);
+                });
+                
+                if (senders.length === 0) {
+                    select.innerHTML = '<option value="">No sender profiles configured</option>';
+                    showToast('Please add a sender profile first', 'warning');
+                }
+            } catch (error) {
+                console.error('Failed to load senders:', error);
+                showToast('Failed to load sender profiles', 'error');
+            }
+        }
+        
+        // Load senders on page load
+        loadSenderProfiles();
+
+        // Recipient management
+        let allRecipients = [];
+        let selectedRecipients = [];
+
+        // Load recipients for select mode
+        async function loadRecipients() {
+            try {
+                const response = await fetch('/api/recipients');
+                allRecipients = await response.json();
+                renderAvailableRecipients();
+            } catch (error) {
+                console.error('Failed to load recipients:', error);
+                showToast('Failed to load recipients', 'error');
+            }
+        }
+
+        // Render available recipients list
+        function renderAvailableRecipients(searchTerm = '') {
+            const availableList = document.getElementById('availableList');
+            const filtered = allRecipients.filter(r => 
+                !selectedRecipients.find(s => s.email === r.email) &&
+                (searchTerm === '' || 
+                 r.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                 (r.name && r.name.toLowerCase().includes(searchTerm.toLowerCase())))
+            );
+
+            if (filtered.length === 0) {
+                availableList.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <p class="mb-0 small">${searchTerm ? 'No matching recipients' : 'No recipients available'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            availableList.innerHTML = filtered.map(recipient => `
+                <a href="#" class="list-group-item list-group-item-action d-flex align-items-center py-3" 
+                   onclick="addRecipient('${recipient.email}'); return false;">
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold">${recipient.name || recipient.email}</div>
+                        ${recipient.name ? `<small class="text-muted">${recipient.email}</small>` : ''}
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle text-success" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+                    </svg>
+                </a>
+            `).join('');
+        }
+
+        // Render selected recipients list
+        function renderSelectedRecipients() {
+            const selectedList = document.getElementById('selectedList');
+            const countElement = document.getElementById('selectedCount');
+            
+            countElement.textContent = selectedRecipients.length;
+
+            if (selectedRecipients.length === 0) {
+                selectedList.innerHTML = `
+                    <div class="text-center text-muted py-5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-inbox mb-2 opacity-25" viewBox="0 0 16 16">
+                            <path d="M4.98 4a.5.5 0 0 0-.39.188L1.54 8H6a.5.5 0 0 1 .5.5 1.5 1.5 0 1 0 3 0A.5.5 0 0 1 10 8h4.46l-3.05-3.812A.5.5 0 0 0 11.02 4zm9.954 5H10.45a2.5 2.5 0 0 1-4.9 0H1.066l.32 2.562a.5.5 0 0 0 .497.438h12.234a.5.5 0 0 0 .496-.438zM3.809 3.563A1.5 1.5 0 0 1 4.981 3h6.038a1.5 1.5 0 0 1 1.172.563l3.7 4.625a.5.5 0 0 1 .105.374l-.39 3.124A1.5 1.5 0 0 1 14.117 13H1.883a1.5 1.5 0 0 1-1.489-1.314l-.39-3.124a.5.5 0 0 1 .106-.374z"/>
+                        </svg>
+                        <p class="mb-0 small">No recipients selected</p>
+                    </div>
+                `;
+                return;
+            }
+
+            selectedList.innerHTML = selectedRecipients.map(recipient => `
+                <div class="list-group-item d-flex align-items-center py-3" style="background: #fef9e7;">
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold">${recipient.name || recipient.email}</div>
+                        ${recipient.name ? `<small class="text-muted">${recipient.email}</small>` : ''}
+                    </div>
+                    <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="removeRecipient('${recipient.email}')" style="text-decoration: none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Add recipient to selected list
+        function addRecipient(email) {
+            const recipient = allRecipients.find(r => r.email === email);
+            if (recipient && !selectedRecipients.find(s => s.email === email)) {
+                selectedRecipients.push(recipient);
+                renderAvailableRecipients(document.getElementById('searchAvailable').value);
+                renderSelectedRecipients();
+            }
+        }
+
+        // Remove recipient from selected list
+        function removeRecipient(email) {
+            selectedRecipients = selectedRecipients.filter(r => r.email !== email);
+            renderAvailableRecipients(document.getElementById('searchAvailable').value);
+            renderSelectedRecipients();
+        }
+
+        // Add all recipients
+        function addAllRecipients() {
+            const searchTerm = document.getElementById('searchAvailable').value.toLowerCase();
+            const available = allRecipients.filter(r => 
+                !selectedRecipients.find(s => s.email === r.email) &&
+                (searchTerm === '' || 
+                 r.email.toLowerCase().includes(searchTerm) ||
+                 (r.name && r.name.toLowerCase().includes(searchTerm)))
+            );
+            selectedRecipients.push(...available);
+            renderAvailableRecipients(searchTerm);
+            renderSelectedRecipients();
+        }
+
+        // Clear all selected recipients
+        function clearAllRecipients() {
+            selectedRecipients = [];
+            renderAvailableRecipients(document.getElementById('searchAvailable').value);
+            renderSelectedRecipients();
+        }
+
+        // Search available recipients
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('searchAvailable');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    renderAvailableRecipients(e.target.value);
+                });
+            }
+        });
+
+        // Load recipients on page load
+        loadRecipients();
+
+        // Toggle between manual and select mode
+        document.querySelectorAll('input[name="recipientMode"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const manualEntry = document.getElementById('manualEntry');
+                const selectEntry = document.getElementById('selectEntry');
+                
+                if (e.target.value === 'manual') {
+                    manualEntry.classList.remove('d-none');
+                    selectEntry.classList.add('d-none');
+                } else {
+                    manualEntry.classList.add('d-none');
+                    selectEntry.classList.remove('d-none');
+                }
+            });
+        });
+
+        // Preview template on selection
+        document.getElementById('templateSelect').addEventListener('change', (e) => {
+            const option = e.target.options[e.target.selectedIndex];
+            const subject = option.dataset.subject;
+            const body = option.dataset.body;
+            
+            if (subject && body) {
+                document.getElementById('previewSubject').textContent = subject;
+                document.getElementById('previewBody').innerHTML = body;
+                document.getElementById('preview').classList.remove('d-none');
+            } else {
+                document.getElementById('preview').classList.add('d-none');
+            }
+        });
+
+        // Send form
+        document.getElementById('sendForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('sendBtn');
+            
+            // Collect emails based on mode
+            const mode = document.querySelector('input[name="recipientMode"]:checked').value;
+            let emails = '';
+            
+            if (mode === 'manual') {
+                emails = document.getElementById('manualEmails').value.trim();
+            } else {
+                if (selectedRecipients.length === 0) {
+                    showToast('Please select at least one recipient', 'error');
+                    return;
+                }
+                emails = selectedRecipients.map(r => r.email).join(', ');
+            }
+            
+            if (!emails) {
+                showToast('Please enter or select at least one recipient', 'error');
+                return;
+            }
+            
+            // Set the hidden field value
+            document.getElementById('finalRecipientEmails').value = emails;
+            
+            setLoading(btn, true);
+            
+            try {
+                const response = await apiRequest('/api/send', 'POST', new FormData(e.target));
+                showToast(response.message, 'success');
+                setTimeout(() => {
+                    location.href = '/logs';
+                }, 1500);
+            } catch (error) {
+                setLoading(btn, false);
+            }
+        });
+    </script>
+
+    <footer>
+        <div class="container">
+            <p>Made with <span class="footer-heart">♥</span> by <a href="https://tomnyambu.dev" target="_blank">Tom Nyambu</a></p>
+        </div>
+    </footer>
+</body>
+</html>

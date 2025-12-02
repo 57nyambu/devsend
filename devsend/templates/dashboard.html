@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - DevSend</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/styles.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">DevSend</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link active" href="/dashboard">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/send">Send Now</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/recipients">Recipients</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/templates">Templates</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/jobs">Scheduled Jobs</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/senders">Senders</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/api-keys">API Keys</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/logs">Logs</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/profile">Profile</a></li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="page-header">
+            <div>
+                <h1>Dashboard</h1>
+                <p class="text-muted mb-0">Overview of your email automation system</p>
+            </div>
+        </div>
+        
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h5>Total Recipients</h5>
+                    <h2>{{ total_recipients }}</h2>
+                    <p class="mb-0" style="font-size: 0.875rem; opacity: 0.9;">Active contacts</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <h5>Email Templates</h5>
+                    <h2>{{ total_templates }}</h2>
+                    <p class="mb-0" style="font-size: 0.875rem; opacity: 0.9;">Ready to send</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <h5>Active Jobs</h5>
+                    <h2>{{ total_jobs }}</h2>
+                    <p class="mb-0" style="font-size: 0.875rem; opacity: 0.9;">Scheduled tasks</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="mb-0">Recent Email Activity</h3>
+                <a href="/logs" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            
+            {% if recent_logs %}
+            <table class="table" id="recentLogsTable">
+                <thead>
+                    <tr>
+                        <th>Recipient</th>
+                        <th>Subject</th>
+                        <th>Status</th>
+                        <th>Sent At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in recent_logs %}
+                    <tr>
+                        <td>
+                            <strong>{{ log.recipient_email }}</strong>
+                        </td>
+                        <td>{{ log.subject }}</td>
+                        <td>
+                            {% if log.status == 'sent' %}
+                            <span class="badge bg-success">
+                                <span class="status-indicator active"></span>Sent
+                            </span>
+                            {% else %}
+                            <span class="badge bg-danger">Failed</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted">{{ log.created_at.strftime('%b %d, %Y %H:%M') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon"></div>
+                <h3>No emails sent yet</h3>
+                <p>Start by creating templates and scheduling your first email campaign</p>
+                <a href="/templates" class="btn btn-primary mt-3">Create Template</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>Made with <span class="footer-heart">♥</span> by <a href="https://tomnyambu.dev" target="_blank">Tom Nyambu</a></p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/app.js"></script>
+</body>
+</html>
