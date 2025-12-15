@@ -7,7 +7,8 @@ from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
 import json
 import logging
-
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent
 from devsend.config import settings
 from devsend.database import get_db, get_db_engine
 from devsend.models import (
@@ -47,12 +48,16 @@ async def lifespan(app: FastAPI):
     logger.info("DevSend shut down")
 
 
+
 app = FastAPI(title="DevSend", version="1.0.0", lifespan=lifespan)
 
 # Setup templates and static files
-templates = Jinja2Templates(directory="devsend/templates")
-app.mount("/static", StaticFiles(directory="devsend/static"), name="static")
-
+templates = Jinja2Templates(directory=BASE_DIR / "templates")
+app.mount(
+    "/static",
+    StaticFiles(directory=BASE_DIR / "static"),
+    name="static"
+)
 
 # Custom exception handler for authentication errors
 @app.exception_handler(HTTPException)

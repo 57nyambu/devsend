@@ -8,13 +8,14 @@ User=tom
 Group=prod
 WorkingDirectory=/home/devsend
 Environment="PATH=/home/devsend/venv/bin"
-ExecStart=/home/devsend/venv/bin/uvicorn devsend.main:app --host 0.0.0.0 --port 8000
+Environment="PYTHONPATH=/home/devsend"
+ExecStart=/home/devsend/venv/bin/python3 -m devsend.main
 Restart=always
 RestartSec=10
 
-# Logging
-StandardOutput=append:/home/devsend/logs/devsend.log
-StandardError=append:/home/devsend/logs/devsend-error.log
+# Logging (uses systemd journal - view with: journalctl -u devsend -f)
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
